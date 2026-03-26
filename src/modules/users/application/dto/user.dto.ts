@@ -1,11 +1,9 @@
-import type { Permission } from "@shared/domain/enums/permission.enum";
-import type { User } from "@users/domain/models/user.entity";
+import type { User } from "@modules/users/domain/models/user.entity";
 import {
   IsArray,
   IsEmail,
   IsOptional,
   IsString,
-  IsUUID,
   MinLength,
 } from "class-validator";
 
@@ -18,12 +16,9 @@ export class CreateUserDto {
   password: string;
 
   @IsOptional()
-  @IsUUID()
-  teacherId?: string;
-
   @IsArray()
   @IsString({ each: true })
-  permissions: Permission[];
+  permissions?: string[];
 }
 
 export class UpdateUserDto {
@@ -37,20 +32,15 @@ export class UpdateUserDto {
   password?: string;
 
   @IsOptional()
-  @IsUUID()
-  teacherId?: string;
-
-  @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  permissions?: Permission[];
+  permissions?: string[];
 }
 
 export class UserResponseDto {
   private constructor(
     public id: string,
     public email: string,
-    public teacherId: string | undefined,
     public permissions: string[],
     public createdAt: Date | undefined,
     public updatedAt: Date | undefined,
@@ -61,7 +51,6 @@ export class UserResponseDto {
     return new UserResponseDto(
       user.id!,
       user.email,
-      user.teacherId,
       user.permissions,
       user.createdAt,
       user.updatedAt,

@@ -1,12 +1,12 @@
-import { AuthService } from "@auth/application/services/auth.service";
-import { AuthController } from "@auth/infra/controllers/auth.controller";
-import { JwtAuthGuard } from "@auth/infra/guards/jwt-auth.guard";
-import { PermissionsGuard } from "@auth/infra/guards/permissions.guard";
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
-import { UsersModule } from "@users/users.module";
+import { UsersModule } from "@modules/users/users.module";
+import { AuthService } from "@modules/auth/application/service/auth.service";
+import { AuthController } from "@modules/auth/infra/controllers/auth.controller";
+import { JwtAuthGuard } from "@modules/auth/infra/guards/jwt-auth.guard";
+import { PermissionsGuard } from "@modules/auth/infra/guards/permissions.guard";
 
 @Module({
   imports: [
