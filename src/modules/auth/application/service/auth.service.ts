@@ -1,7 +1,7 @@
 import type { LoginDto } from "@modules/auth/application/dto/auth.dto";
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { UserService } from "@modules/users/application/services/user.service";
+import { UserService } from "@modules/users/application/service/users.service";
 
 @Injectable()
 export class AuthService {

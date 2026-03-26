@@ -7,7 +7,7 @@ import {
   Post,
   Put,
 } from "@nestjs/common";
-import { UserService } from "@modules/users/application/services/user.service";
+import { UserService } from "@modules/users/application/service/users.service";
 import { CreateUserDto, UpdateUserDto } from "@modules/users/application/dto/user.dto";
 import { Public } from "@shared/infra/decorators/public.decorator";
 

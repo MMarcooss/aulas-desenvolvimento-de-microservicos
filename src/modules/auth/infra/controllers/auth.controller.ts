@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Query, Req, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Request } from "express";
-import { AuthService } from "@modules/auth/application/services/auth.service";
+import { AuthService } from "@modules/auth/application/service/auth.service";
 import { LoginDto } from "@modules/auth/application/dto/auth.dto";
 import { Public } from "@shared/infra/decorators/public.decorator";
 import type { AuthenticatedUser } from "@shared/infra/decorators/current-user.decorator";
