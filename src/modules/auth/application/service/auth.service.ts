@@ -1,20 +1,21 @@
+import type { LoginDto } from "@modules/auth/application/dto/auth.dto";
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { UsersService } from "../../../users/application/service/users.service";
-import { LoginDto } from "../dto/auth.dto";
+import { UserService } from "@modules/users/application/services/user.service";
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly usersService: UsersService,
+    private readonly userService: UserService,
     private readonly jwtService: JwtService,
   ) {}
 
   async login(dto: LoginDto): Promise<{ accessToken: string }> {
-    const user = await this.usersService.validateCredentials(
+    const user = await this.userService.validateCredentials(
       dto.email,
       dto.password,
     );
+
     if (!user) throw new UnauthorizedException("Invalid credentials");
 
     const accessToken = await this.jwtService.signAsync({

@@ -1,7 +1,11 @@
-import { Injectable, OnModuleDestroy } from "@nestjs/common";
+import { Injectable, type OnModuleDestroy } from "@nestjs/common";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { usersSchema } from "../../../modules/users/infra/schemas/user.schema";
+import { usersSchema } from "@modules/users/infra/schemas/user.schema";
+
+const schema = {
+  usersSchema,
+};
 
 @Injectable()
 export class DrizzleService implements OnModuleDestroy {
@@ -12,7 +16,8 @@ export class DrizzleService implements OnModuleDestroy {
     this.pool = new Pool({
       connectionString: process.env.DATABASE_URL,
     });
-    this.db = drizzle(this.pool, { schema: { usersSchema } });
+
+    this.db = drizzle(this.pool, { schema });
   }
 
   async onModuleDestroy() {
