@@ -2,15 +2,24 @@ export class User {
   private readonly _id?: string;
   private _email: string;
   private _password: string;
-  private _teacherId?: string;
   private _permissions: string[];
   private readonly _createdAt?: Date;
   private readonly _updatedAt?: Date;
 
-  private constructor(id?: string, createdAt?: Date, updatedAt?: Date) {
-    this._id = id;
-    this._createdAt = createdAt;
-    this._updatedAt = updatedAt;
+  private constructor(props: {
+    id?: string;
+    email: string;
+    password: string;
+    permissions: string[];
+    createdAt?: Date;
+    updatedAt?: Date;
+  }) {
+    this._id = props.id;
+    this._email = props.email;
+    this._password = props.password;
+    this._permissions = props.permissions;
+    this._createdAt = props.createdAt;
+    this._updatedAt = props.updatedAt;
   }
 
   get id(): string | undefined {
@@ -25,10 +34,6 @@ export class User {
     return this._password;
   }
 
-  get teacherId(): string | undefined {
-    return this._teacherId;
-  }
-
   get permissions(): string[] {
     return this._permissions;
   }
@@ -41,43 +46,41 @@ export class User {
     return this._updatedAt;
   }
 
-  withEmail(email: string) {
+  withEmail(email: string): this {
     this._email = email;
     return this;
   }
 
-  withPassword(password: string) {
+  withPassword(password: string): this {
     this._password = password;
     return this;
   }
 
-  withTeacherId(teacherId: string | undefined) {
-    this._teacherId = teacherId;
-    return this;
-  }
-
-  withPermissions(permissions: string[]) {
+  withPermissions(permissions: string[]): this {
     this._permissions = permissions;
     return this;
   }
 
-  static restore(props?: {
-    id?: string;
+  static create(props: {
     email: string;
     password: string;
-    teacherId?: string | null;
+    permissions?: string[];
+  }): User {
+    return new User({
+      email: props.email,
+      password: props.password,
+      permissions: props.permissions ?? [],
+    });
+  }
+
+  static restore(props: {
+    id: string;
+    email: string;
+    password: string;
     permissions: string[];
-    createdAt?: Date;
-    updatedAt?: Date;
-  }): User | null {
-    if (!props) return null;
-
-    const user = new User(props.id, props.createdAt, props.updatedAt);
-    user._email = props.email;
-    user._password = props.password;
-    user._teacherId = props.teacherId ?? undefined;
-    user._permissions = props.permissions ?? [];
-
-    return user;
+    createdAt: Date;
+    updatedAt: Date;
+  }): User {
+    return new User(props);
   }
 }

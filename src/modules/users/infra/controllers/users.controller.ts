@@ -1,48 +1,22 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-} from "@nestjs/common";
-import { Permission } from "@shared/domain/enums/permission.enum";
-import { RequirePermissions } from "@shared/infra/decorators/permissions.decorator";
-import { CreateUserDto, UpdateUserDto } from "@users/application/dto/user.dto";
-import { UserService } from "@users/application/services/user.service";
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { UsersService } from "../../application/service/users.service";
+import { CreateUserDto, UserResponseDto } from "./user.dto";
+import { Public } from "../../../auth/public.decorator";
 
 @Controller("users")
 export class UsersController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly usersService: UsersService) {}
 
-  @Get()
-  @RequirePermissions(Permission.USERS_READ)
-  async findAll() {
-    return this.userService.list();
+  @Post()
+  @Public()
+  async create(@Body() body: CreateUserDto): Promise<UserResponseDto> {
+    const user = await this.usersService.create(body);
+    return UserResponseDto.from(user);
   }
 
   @Get(":id")
-  @RequirePermissions(Permission.USERS_READ)
-  async findById(@Param("id") id: string) {
-    return this.userService.findById(id);
-  }
-
-  @Post()
-  @RequirePermissions(Permission.USERS_WRITE)
-  async create(@Body() body: CreateUserDto) {
-    return this.userService.create(body);
-  }
-
-  @Put(":id")
-  @RequirePermissions(Permission.USERS_WRITE)
-  async update(@Param("id") id: string, @Body() body: UpdateUserDto) {
-    return this.userService.edit(id, body);
-  }
-
-  @Delete(":id")
-  @RequirePermissions(Permission.USERS_DELETE)
-  async remove(@Param("id") id: string) {
-    return this.userService.remove(id);
+  async findById(@Param("id") id: string): Promise<UserResponseDto> {
+    const user = await this.usersService.findById(id);
+    return UserResponseDto.from(user);
   }
 }
