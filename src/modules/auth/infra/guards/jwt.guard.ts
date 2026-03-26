@@ -6,14 +6,9 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { JwtService } from "@nestjs/jwt";
-import { Request } from "express";
-import { IS_PUBLIC_KEY } from "./public.decorator";
-
-export interface AuthenticatedUser {
-  sub: string;
-  email: string;
-  permissions: string[];
-}
+import type { AuthenticatedUser } from "@shared/infra/decorators/current-user.decorator";
+import { IS_PUBLIC_KEY } from "@shared/infra/decorators/public.decorator";
+import type { Request } from "express";
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -27,22 +22,22 @@ export class JwtAuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
+
     if (isPublic) return true;
 
-    const request = context
-      .switchToHttp()
-      .getRequest<Request & { user?: AuthenticatedUser }>();
+    const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractToken(request);
 
     if (!token) throw new UnauthorizedException("Missing token");
 
     try {
-      request.user = await this.jwtService.verifyAsync<AuthenticatedUser>(
+      const payload = await this.jwtService.verifyAsync<AuthenticatedUser>(
         token,
         { secret: process.env.JWT_SECRET },
       );
+      (request as Request & { user: AuthenticatedUser }).user = payload;
     } catch {
-      throw new UnauthorizedException("Invalid token");
+      throw new UnauthorizedException("Invalid or expired token");
     }
 
     return true;

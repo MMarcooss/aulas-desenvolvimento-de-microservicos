@@ -1,11 +1,13 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import { UsersModule } from "./users.module";
-import { AuthModule } from "./auth/auth.module";
+import { SharedModule } from "@shared/shared.module";
+import { AuthModule } from "@modules/auth/auth.module";
+import { UsersModule } from "@modules/users/users.module";
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot(),
+    SharedModule,
     UsersModule,
     AuthModule,
   ],

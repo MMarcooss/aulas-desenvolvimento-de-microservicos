@@ -1,64 +1,88 @@
-import { ConflictException, Injectable, NotFoundException } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import bcrypt from "bcryptjs";
-import { DrizzleService } from "../../../apps/auth/src/drizzle.service";
-import { usersSchema } from "../../infra/schemas/user.schema";
-import { User } from "../../domain/models/user.entity";
-import { CreateUserDto } from "./user.dto";
-
-export interface UserPayload {
-  id: string;
-  email: string;
-  permissions: string[];
-}
+import {
+  type CreateUserDto,
+  type UpdateUserDto,
+  type UserPayload,
+  UserResponseDto,
+} from "@modules/users/application/dto/user.dto";
+import { User } from "@modules/users/domain/models/user.entity";
+import {
+  USER_REPOSITORY,
+  type UserRepository,
+} from "@modules/users/domain/repositories/user-repository.interface";
 
 @Injectable()
-export class UsersService {
-  constructor(private readonly drizzle: DrizzleService) {}
+export class UserService {
+  constructor(
+    @Inject(USER_REPOSITORY)
+    private readonly userRepository: UserRepository,
+  ) {}
 
-  async create(dto: CreateUserDto): Promise<User> {
-    const existing = await this.drizzle.db.query.usersSchema.findFirst({
-      where: eq(usersSchema.email, dto.email),
-    });
-    if (existing) throw new ConflictException("Email already in use");
+  async create(dto: CreateUserDto): Promise<void> {
+    const existing = await this.userRepository.findByEmail(dto.email);
+    if (existing) throw new ConflictException("Email already registered");
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const now = new Date();
+    const user = User.restore({
+      email: dto.email.toLowerCase(),
+      password: hashedPassword,
+      permissions: dto.permissions ?? [],
+    })!;
 
-    const [row] = await this.drizzle.db
-      .insert(usersSchema)
-      .values({
-        email: dto.email,
-        password: hashedPassword,
-        permissions: dto.permissions ?? [],
-        createdAt: now,
-        updatedAt: now,
-      })
-      .returning();
-
-    return User.restore(row);
+    await this.userRepository.create(user);
   }
 
-  async findById(id: string): Promise<User> {
-    const row = await this.drizzle.db.query.usersSchema.findFirst({
-      where: eq(usersSchema.id, id),
-    });
-    if (!row) throw new NotFoundException("User not found");
-    return User.restore(row);
+  async edit(id: string, dto: UpdateUserDto): Promise<void> {
+    const user = await this.userRepository.findById(id);
+    if (!user) throw new NotFoundException("User not found");
+
+    if (dto.email && dto.email !== user.email) {
+      const existing = await this.userRepository.findByEmail(dto.email);
+      if (existing) throw new ConflictException("Email already registered");
+      user.withEmail(dto.email.toLowerCase());
+    }
+
+    if (dto.password) {
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
+      user.withPassword(hashedPassword);
+    }
+
+    if (dto.permissions !== undefined)
+      user.withPermissions(dto.permissions);
+
+    await this.userRepository.update(user);
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.userRepository.delete(id);
+  }
+
+  async list(): Promise<UserResponseDto[]> {
+    const users = await this.userRepository.findAll();
+    return users.map((u) => UserResponseDto.from(u)!);
+  }
+
+  async findById(id: string): Promise<UserResponseDto | null> {
+    const user = await this.userRepository.findById(id);
+    return UserResponseDto.from(user);
   }
 
   async validateCredentials(
     email: string,
     password: string,
   ): Promise<UserPayload | null> {
-    const row = await this.drizzle.db.query.usersSchema.findFirst({
-      where: eq(usersSchema.email, email),
-    });
-    if (!row) return null;
+    const user = await this.userRepository.findByEmail(email.toLowerCase());
+    if (!user) return null;
 
-    const isValid = await bcrypt.compare(password, row.password);
-    if (!isValid) return null;
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return null;
 
-    return { id: row.id, email: row.email, permissions: row.permissions };
+    return { id: user.id!, email: user.email, permissions: user.permissions };
   }
 }
