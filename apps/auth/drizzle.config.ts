@@ -1,11 +1,10 @@
 import { defineConfig } from "drizzle-kit";
-import "dotenv/config";
 
 export default defineConfig({
-  schema: "./src/users/user.schema.ts",
-  out: "./drizzle",
+  schema: "./src/modules/**/infra/schemas/*.ts",
+  out: "./src/shared/infra/database/drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL!,
+    url: "postgresql://postgres:postgres@localhost:5432/school_control",
   },
 });
