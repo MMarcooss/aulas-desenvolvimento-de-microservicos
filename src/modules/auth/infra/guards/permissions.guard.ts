@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { AuthenticatedUser } from "@shared/infra/decorators/current-user.decorator";
+import { IS_PUBLIC_KEY } from "@shared/infra/decorators/public.decorator";
 import { PERMISSIONS_KEY } from "@shared/infra/decorators/permissions.decorator";
 
 @Injectable()
