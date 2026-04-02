@@ -5,11 +5,12 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import bcrypt from "bcryptjs";
+import type { PaginatedResult } from "@shared/infra/hateoas";
 import {
   type CreateUserDto,
   type UpdateUserDto,
   type UserPayload,
-  UserResponseDto,
+  UserDto,
 } from "@modules/users/application/dto/user.dto";
 import { User } from "@modules/users/domain/models/user.entity";
 import {
@@ -63,14 +64,24 @@ export class UserService {
     await this.userRepository.delete(id);
   }
 
-  async list(): Promise<UserResponseDto[]> {
-    const users = await this.userRepository.findAll();
-    return users.map((u) => UserResponseDto.from(u)!);
+  async listPaginated({ page, limit }: { page: number; limit: number }): Promise<PaginatedResult<UserDto>> {
+    const allUsers = await this.userRepository.findAll();
+    const total = allUsers.length;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedUsers = allUsers.slice(startIndex, endIndex);
+
+    return {
+      data: paginatedUsers.map((u) => UserDto.fromUser(u)!),
+      total,
+      page,
+      limit,
+    };
   }
 
-  async findById(id: string): Promise<UserResponseDto | null> {
+  async findById(id: string): Promise<UserDto | null> {
     const user = await this.userRepository.findById(id);
-    return UserResponseDto.from(user);
+    return UserDto.fromUser(user);
   }
 
   async validateCredentials(
