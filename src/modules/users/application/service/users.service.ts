@@ -4,18 +4,19 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import bcrypt from "bcryptjs";
+import type { PaginatedResult } from "@shared/infra/hateoas";
 import {
   type CreateUserDto,
   type UpdateUserDto,
   type UserPayload,
-  UserResponseDto,
-} from "@users/application/dto/user.dto";
-import { User } from "@users/domain/models/user.entity";
+  UserDto,
+} from "@modules/users/application/dto/user.dto";
+import { User } from "@modules/users/domain/models/user.entity";
 import {
   USER_REPOSITORY,
   type UserRepository,
-} from "@users/domain/repositories/user-repository.interface";
-import bcrypt from "bcryptjs";
+} from "@modules/users/domain/repositories/user-repository.interface";
 
 @Injectable()
 export class UserService {
@@ -32,8 +33,7 @@ export class UserService {
     const user = User.restore({
       email: dto.email.toLowerCase(),
       password: hashedPassword,
-      teacherId: dto.teacherId,
-      permissions: dto.permissions as string[],
+      permissions: dto.permissions ?? [],
     })!;
 
     await this.userRepository.create(user);
@@ -54,9 +54,8 @@ export class UserService {
       user.withPassword(hashedPassword);
     }
 
-    if (dto.teacherId !== undefined) user.withTeacherId(dto.teacherId);
     if (dto.permissions !== undefined)
-      user.withPermissions(dto.permissions as string[]);
+      user.withPermissions(dto.permissions);
 
     await this.userRepository.update(user);
   }
@@ -65,14 +64,24 @@ export class UserService {
     await this.userRepository.delete(id);
   }
 
-  async list(): Promise<UserResponseDto[]> {
-    const users = await this.userRepository.findAll();
-    return users.map((u) => UserResponseDto.from(u)!);
+  async listPaginated({ page, limit }: { page: number; limit: number }): Promise<PaginatedResult<UserDto>> {
+    const allUsers = await this.userRepository.findAll();
+    const total = allUsers.length;
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedUsers = allUsers.slice(startIndex, endIndex);
+
+    return {
+      data: paginatedUsers.map((u) => UserDto.fromUser(u)!),
+      total,
+      page,
+      limit,
+    };
   }
 
-  async findById(id: string): Promise<UserResponseDto | null> {
+  async findById(id: string): Promise<UserDto | null> {
     const user = await this.userRepository.findById(id);
-    return UserResponseDto.from(user);
+    return UserDto.fromUser(user);
   }
 
   async validateCredentials(

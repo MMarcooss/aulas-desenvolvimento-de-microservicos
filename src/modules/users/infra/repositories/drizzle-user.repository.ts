@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { DrizzleService } from "@shared/infra/database/drizzle.service";
-import { User } from "@users/domain/models/user.entity";
-import type { UserRepository } from "@users/domain/repositories/user-repository.interface";
-import { usersSchema } from "@users/infra/schemas/user.schema";
 import { eq } from "drizzle-orm";
+import { DrizzleService } from "@shared/infra/database/drizzle.service";
+import { User } from "@modules/users/domain/models/user.entity";
+import type { UserRepository } from "@modules/users/domain/repositories/user-repository.interface";
+import { usersSchema } from "@modules/users/infra/schemas/user.schema";
 
 @Injectable()
 export class DrizzleUserRepository implements UserRepository {
@@ -13,7 +13,6 @@ export class DrizzleUserRepository implements UserRepository {
     await this.drizzleService.db.insert(usersSchema).values({
       email: user.email,
       password: user.password,
-      teacherId: user.teacherId ?? null,
       permissions: user.permissions,
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -26,7 +25,6 @@ export class DrizzleUserRepository implements UserRepository {
       .set({
         email: user.email,
         password: user.password,
-        teacherId: user.teacherId ?? null,
         permissions: user.permissions,
         updatedAt: new Date(),
       })

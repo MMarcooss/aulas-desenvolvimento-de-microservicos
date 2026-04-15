@@ -1,4 +1,4 @@
-import type { User } from "@users/domain/models/user.entity";
+import type { User } from "@modules/users/domain/models/user.entity";
 
 export const USER_REPOSITORY = Symbol("USER_REPOSITORY");
 
