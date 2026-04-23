@@ -17,12 +17,14 @@ import {
   USER_REPOSITORY,
   type UserRepository,
 } from "@modules/users/domain/repositories/user-repository.interface";
+import { MessagingPublisherService } from "@modules/messaging/application/services/messaging-publisher.service";
 
 @Injectable()
 export class UserService {
   constructor(
     @Inject(USER_REPOSITORY)
     private readonly userRepository: UserRepository,
+    private readonly messagingPublisher: MessagingPublisherService,
   ) {}
 
   async create(dto: CreateUserDto): Promise<void> {
@@ -37,6 +39,7 @@ export class UserService {
     })!;
 
     await this.userRepository.create(user);
+    await this.messagingPublisher.publish("created", { id: user.id, email: user.email, permissions: user.permissions });
   }
 
   async edit(id: string, dto: UpdateUserDto): Promise<void> {
@@ -58,10 +61,12 @@ export class UserService {
       user.withPermissions(dto.permissions);
 
     await this.userRepository.update(user);
+    await this.messagingPublisher.publish("updated", { id: user.id, email: user.email, permissions: user.permissions });
   }
 
   async remove(id: string): Promise<void> {
     await this.userRepository.delete(id);
+    await this.messagingPublisher.publish("deleted", { id });
   }
 
   async listPaginated({ page, limit }: { page: number; limit: number }): Promise<PaginatedResult<UserDto>> {
